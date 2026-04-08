@@ -184,6 +184,7 @@ export default function ClientesPage() {
   const [fileName, setFileName]     = useState<string | null>(null);
   const [filterMin, setFilterMin]   = useState("");
   const [filterMax, setFilterMax]   = useState("");
+  const [busqueda, setBusqueda]     = useState("");
   const [updatedAt, setUpdatedAt]   = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -259,13 +260,26 @@ export default function ClientesPage() {
   const applyFilter = () => {
     const minVal = filterMin === "" ? -Infinity : parseFloat(filterMin);
     const maxVal = filterMax === "" ?  Infinity : parseFloat(filterMax);
-    setClients(allClients.filter(c => c.total >= minVal && c.total <= maxVal).map((c, i) => ({ ...c, ranking: i + 1 })));
+    const q = normalizar(busqueda);
+    setClients(
+      allClients
+        .filter(c => c.total >= minVal && c.total <= maxVal)
+        .filter(c => !q || normalizar(c.cliente).includes(q))
+        .map((c, i) => ({ ...c, ranking: i + 1 }))
+    );
   };
 
   const clearFilter = () => {
-    setFilterMin(""); setFilterMax("");
+    setFilterMin(""); setFilterMax(""); setBusqueda("");
     setClients(allClients.map((c, i) => ({ ...c, ranking: i + 1 })));
   };
+
+  // Búsqueda en vivo por nombre
+  const clientesFiltrados = busqueda
+    ? clients.filter(c => normalizar(c.cliente).includes(normalizar(busqueda)))
+    : clients;
+
+  const totalGeneral = clientesFiltrados.reduce((s, c) => s + c.total, 0);
 
   const downloadReport = () => {
     if (!clients.length) return;
@@ -461,6 +475,21 @@ export default function ClientesPage() {
 
         {/* Filtro */}
         <div style={{ flex: 1, minWidth: 260, display: "flex", flexDirection: "column", justifyContent: "center", gap: 16 }}>
+
+          {/* Buscador por nombre */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)" }}>
+              Buscar cliente:
+            </label>
+            <input
+              type="text"
+              placeholder="Escribe el nombre del cliente..."
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: 8, fontSize: 13, border: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", outline: "none", width: "100%", maxWidth: 360 }}
+            />
+          </div>
+
           <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)" }}>
             Filtrar por Monto Total:
           </p>
@@ -485,10 +514,18 @@ export default function ClientesPage() {
             >
               Aplicar Filtro
             </button>
-            {(filterMin || filterMax) && (
+            {(filterMin || filterMax || busqueda) && (
               <button onClick={clearFilter} style={{ fontSize: 13, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" }}>
                 Limpiar
               </button>
+            )}
+
+            {/* Total general */}
+            {clientesFiltrados.length > 0 && (
+              <div style={{ marginLeft: "auto", textAlign: "right", backgroundColor: "rgba(232,96,10,0.06)", border: "1px solid rgba(232,96,10,0.2)", borderRadius: 10, padding: "8px 16px" }}>
+                <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>TOTAL GENERAL</p>
+                <p style={{ fontSize: 18, fontWeight: 800, color: "#E8600A" }}>{fmtMoney(totalGeneral)}</p>
+              </div>
             )}
           </div>
         </div>
@@ -529,15 +566,17 @@ export default function ClientesPage() {
               </td></tr>
             )}
 
-            {!loading && clients.length === 0 && (
+            {!loading && clientesFiltrados.length === 0 && (
               <tr><td colSpan={4} style={{ textAlign: "center", padding: 60, fontSize: 13, color: "var(--text-muted)", backgroundColor: "var(--bg-card)" }}>
                 {secciones.length === 0
                   ? "Carga un archivo Excel para ver el ranking de clientes."
+                  : busqueda
+                  ? `No se encontró ningún cliente con "${busqueda}".`
                   : `No hay datos de tipo "${tipoActualLabel}" en este archivo.`}
               </td></tr>
             )}
 
-            {!loading && clients.map((c, idx) => (
+            {!loading && clientesFiltrados.map((c, idx) => (
               <tr
                 key={c.cliente}
                 style={{ backgroundColor: "var(--bg-card)", borderBottom: "1px solid var(--border-color)", transition: "background 0.12s" }}
@@ -553,10 +592,10 @@ export default function ClientesPage() {
           </tbody>
         </table>
 
-        {clients.length > 0 && (
+        {clientesFiltrados.length > 0 && (
           <div style={{ padding: "10px 20px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-card)", textAlign: "right" }}>
             <p style={{ fontSize: 12, color: "var(--text-muted)", fontStyle: "italic" }}>
-              Mostrando {clients.length} de {allClients.length} clientes
+              Mostrando {clientesFiltrados.length} de {allClients.length} clientes
             </p>
           </div>
         )}
