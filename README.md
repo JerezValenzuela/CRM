@@ -1,73 +1,35 @@
-# React + TypeScript + Vite
+# CRM — Clientes por Monto Total
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Módulo de ranking de clientes basado en ventas acumuladas. Desarrollado con Vite + React + TypeScript.
 
-Currently, two official plugins are available:
+## Archivo Excel requerido
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Usa el reporte **"Informe de Facturas por Cliente #6"** exportado desde el sistema de contabilidad.
 
-## React Compiler
+- Formato: `.xlsx` o `.xls`
+- Los datos deben comenzar en la **fila 10**
+- Columnas utilizadas:
+  - **A** — Fecha
+  - **B** — Nº de Factura / Nota
+  - **C** — Cliente
+  - **D** — Monto
+- El sistema detecta automáticamente las secciones del archivo:
+  - Notas de Venta
+  - Facturas
+  - Descuentos
+- Usa el selector de tipo para filtrar por sección o combinarlas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Cómo usar
 
-## Expanding the ESLint configuration
+1. Abre la app en `http://localhost:5173`
+2. Selecciona el tipo de documento a analizar
+3. Arrastra el archivo Excel o haz clic en **Seleccionar Archivo**
+4. Usa el filtro por monto si necesitas segmentar el ranking
+5. Descarga el reporte en CSV con el botón **Descargar Reporte**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Instalación
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
