@@ -292,21 +292,88 @@ export default function ClientesPage() {
   return (
     <div style={{ maxWidth: 1140, margin: "0 auto", padding: "32px 24px" }}>
 
-      {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
-        <div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: "var(--navy)", letterSpacing: "-0.5px" }}>
-            Clientes por Monto Total
-          </h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 4 }}>
-            Ranking de clientes según ventas acumuladas
-          </p>
+      {/* ── Header + Selector de Tipo ── */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        flexWrap: "wrap", gap: 16, marginBottom: 24,
+      }}>
+        {/* Título + tabs al lado */}
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
+          <div>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: "var(--navy)", letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
+              Clientes por Monto Total
+            </h1>
+            <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 3 }}>
+              Ranking de clientes según ventas acumuladas
+            </p>
+          </div>
+
+          {/* Separador vertical */}
+          <div style={{ width: 1, height: 40, backgroundColor: "var(--border-color)", flexShrink: 0 }} />
+
+          {/* Tabs de tipo */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {TIPOS.map(op => {
+              const activo = tipo === op.id;
+              const n = conteo(op.id);
+              return (
+                <button
+                  key={op.id}
+                  onClick={() => handleTipoChange(op.id)}
+                  title={op.desc}
+                  style={{
+                    padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    cursor: "pointer", transition: "all 0.15s",
+                    backgroundColor: activo ? "#E8600A" : "var(--bg-card)",
+                    color: activo ? "#fff" : "var(--text-secondary)",
+                    border: activo ? "2px solid #E8600A" : "2px solid var(--border-color)",
+                  }}
+                >
+                  {op.label}
+                  {secciones.length > 0 && (
+                    <span style={{
+                      marginLeft: 5, fontSize: 11, fontWeight: 700,
+                      backgroundColor: activo ? "rgba(255,255,255,0.25)" : "var(--bg-secondary)",
+                      color: activo ? "#fff" : "var(--text-muted)",
+                      borderRadius: 20, padding: "1px 6px",
+                    }}>
+                      {n}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Chips de secciones detectadas */}
+          {secciones.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Detectadas:</span>
+              {secciones.map((s, i) => (
+                <span key={i} style={{
+                  fontSize: 11, padding: "2px 9px", borderRadius: 20, fontWeight: 600,
+                  backgroundColor: s.tipo === "notas" ? "rgba(99,102,241,0.1)"
+                    : s.tipo === "facturas" ? "rgba(16,185,129,0.1)"
+                    : s.tipo === "descuentos" ? "rgba(239,68,68,0.1)"
+                    : "rgba(148,163,184,0.1)",
+                  color: s.tipo === "notas" ? "#6366F1"
+                    : s.tipo === "facturas" ? "#10B981"
+                    : s.tipo === "descuentos" ? "#EF4444"
+                    : "var(--text-muted)",
+                }}>
+                  {s.label} ({s.filas.length})
+                </span>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Botón descargar */}
         <button
           onClick={downloadReport}
           disabled={!clients.length}
           style={{
-            display: "flex", alignItems: "center", gap: 8,
+            display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
             backgroundColor: clients.length ? "#E8600A" : "#ccc",
             color: "#fff", border: "none", borderRadius: 8,
             padding: "10px 20px", fontWeight: 700, fontSize: 14,
@@ -317,71 +384,6 @@ export default function ClientesPage() {
         >
           <Download size={15} /> Descargar Reporte
         </button>
-      </div>
-
-      {/* ── Selector de Tipo ── */}
-      <div style={{
-        backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)",
-        borderRadius: 12, padding: "18px 24px", marginBottom: 20,
-      }}>
-        <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", marginBottom: 12 }}>
-          Tipo de documento a analizar:
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {TIPOS.map(op => {
-            const activo = tipo === op.id;
-            const n = conteo(op.id);
-            return (
-              <button
-                key={op.id}
-                onClick={() => handleTipoChange(op.id)}
-                title={op.desc}
-                style={{
-                  padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  cursor: "pointer", transition: "all 0.15s",
-                  backgroundColor: activo ? "#E8600A" : "var(--bg-secondary)",
-                  color: activo ? "#fff" : "var(--text-secondary)",
-                  border: activo ? "2px solid #E8600A" : "2px solid var(--border-color)",
-                }}
-              >
-                {op.label}
-                {secciones.length > 0 && (
-                  <span style={{
-                    marginLeft: 6, fontSize: 11, fontWeight: 700,
-                    backgroundColor: activo ? "rgba(255,255,255,0.25)" : "var(--border-color)",
-                    color: activo ? "#fff" : "var(--text-muted)",
-                    borderRadius: 20, padding: "1px 7px",
-                  }}>
-                    {n}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Secciones detectadas */}
-        {secciones.length > 0 && (
-          <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <span style={{ fontSize: 11, color: "var(--text-muted)", alignSelf: "center" }}>Detectadas:</span>
-            {secciones.map((s, i) => (
-              <span key={i} style={{
-                fontSize: 11, padding: "3px 10px", borderRadius: 20,
-                backgroundColor: s.tipo === "notas" ? "rgba(99,102,241,0.1)"
-                  : s.tipo === "facturas" ? "rgba(16,185,129,0.1)"
-                  : s.tipo === "descuentos" ? "rgba(239,68,68,0.1)"
-                  : "rgba(148,163,184,0.1)",
-                color: s.tipo === "notas" ? "#6366F1"
-                  : s.tipo === "facturas" ? "#10B981"
-                  : s.tipo === "descuentos" ? "#EF4444"
-                  : "var(--text-muted)",
-                fontWeight: 600,
-              }}>
-                {s.label} ({s.filas.length})
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ── Upload + Filtro ── */}
@@ -433,6 +435,9 @@ export default function ClientesPage() {
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>Arrastra tu archivo Excel aquí</p>
                 <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>Formatos soportados: .xlsx, .xls, .csv</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "#E8600A", marginTop: 8, backgroundColor: "rgba(232,96,10,0.08)", borderRadius: 6, padding: "4px 10px", display: "inline-block" }}>
+                  📄 Usar Informe de Facturas #6
+                </p>
               </div>
               <button
                 onClick={e => { e.stopPropagation(); inputRef.current?.click(); }}
