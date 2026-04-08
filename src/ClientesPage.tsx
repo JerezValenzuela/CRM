@@ -139,16 +139,26 @@ function detectarSecciones(rows: unknown[][]): Seccion[] {
   return secciones.filter(s => s.filas.length > 0);
 }
 
+/** Normaliza nombre para usar como clave de agrupación */
+function normalizar(nombre: string): string {
+  return nombre
+    .trim()
+    .replace(/\s+/g, " ")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+}
+
 /** Agrupa filas por cliente y devuelve ranking */
 function agrupar(filas: { cliente: string; monto: number }[]): ClientRow[] {
-  const map = new Map<string, { total: number; compras: number }>();
+  const map = new Map<string, { total: number; compras: number; display: string }>();
   for (const { cliente, monto } of filas) {
-    const prev = map.get(cliente) ?? { total: 0, compras: 0 };
-    map.set(cliente, { total: prev.total + monto, compras: prev.compras + 1 });
+    const key = normalizar(cliente);
+    const prev = map.get(key) ?? { total: 0, compras: 0, display: cliente.trim() };
+    map.set(key, { total: prev.total + monto, compras: prev.compras + 1, display: prev.display });
   }
   return Array.from(map.entries())
     .sort((a, b) => b[1].total - a[1].total)
-    .map(([cliente, { total, compras }], i) => ({ ranking: i + 1, cliente, total, compras }));
+    .map(([, { total, compras, display }], i) => ({ ranking: i + 1, cliente: display, total, compras }));
 }
 
 // ── Opciones de tipo ──────────────────────────────────────────────────────────
