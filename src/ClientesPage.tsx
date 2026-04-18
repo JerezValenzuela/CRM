@@ -15,7 +15,7 @@ interface ClientRow {
 
 // Una sección detectada en el Excel: { tipo, filas de datos }
 interface Seccion {
-  tipo: "notas" | "facturas" | "descuentos" | "otro";
+  tipo: "notas" | "facturas" | "descuentos" | "devoluciones" | "otro";
   label: string;           // nombre original detectado
   filas: { cliente: string; monto: number }[];
 }
@@ -47,6 +47,8 @@ function clasificarSeccion(texto: string): Seccion["tipo"] {
   if (t.includes("nota") && t.includes("venta")) return "notas";
   if (t.includes("factura")) return "facturas";
   if (t.includes("descuento")) return "descuentos";
+  // Detecta secciones de devoluciones (ej: "0. Devoluciones", "Devolución", etc.)
+  if (t.includes("devolucion") || t.includes("devoluci")) return "devoluciones";
   return "otro";
 }
 
@@ -193,9 +195,21 @@ export default function ClientesPage() {
     let filas: { cliente: string; monto: number }[] = [];
 
     if (t === "todo") {
-      filas = secs.flatMap(s => s.filas);
+      // En "Todo": Notas + Facturas + Descuentos SUMAN; Devoluciones RESTAN
+      filas = secs.flatMap(s =>
+        s.tipo === "devoluciones"
+          ? s.filas.map(f => ({ ...f, monto: -Math.abs(f.monto) }))
+          : s.filas
+      );
     } else if (t === "combinado") {
-      filas = secs.filter(s => s.tipo === "notas" || s.tipo === "facturas").flatMap(s => s.filas);
+      // En "Notas + Facturas": solo notas y facturas suman; devoluciones restan
+      filas = secs
+        .filter(s => s.tipo === "notas" || s.tipo === "facturas" || s.tipo === "devoluciones")
+        .flatMap(s =>
+          s.tipo === "devoluciones"
+            ? s.filas.map(f => ({ ...f, monto: -Math.abs(f.monto) }))
+            : s.filas
+        );
     } else {
       filas = secs.filter(s => s.tipo === t).flatMap(s => s.filas);
     }
@@ -379,13 +393,15 @@ export default function ClientesPage() {
                   backgroundColor: s.tipo === "notas" ? "rgba(99,102,241,0.1)"
                     : s.tipo === "facturas" ? "rgba(16,185,129,0.1)"
                     : s.tipo === "descuentos" ? "rgba(239,68,68,0.1)"
+                    : s.tipo === "devoluciones" ? "rgba(245,158,11,0.12)"
                     : "rgba(148,163,184,0.1)",
                   color: s.tipo === "notas" ? "#6366F1"
                     : s.tipo === "facturas" ? "#10B981"
                     : s.tipo === "descuentos" ? "#EF4444"
+                    : s.tipo === "devoluciones" ? "#D97706"
                     : "var(--text-muted)",
                 }}>
-                  {s.label} ({s.filas.length})
+                  {s.tipo === "devoluciones" ? "↩ " : ""}{s.label} ({s.filas.length})
                 </span>
               ))}
             </div>
